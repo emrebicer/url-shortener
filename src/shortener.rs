@@ -1,5 +1,7 @@
 use chrono::{DateTime, Utc};
 use std::collections::VecDeque;
+use rand::distributions::Alphanumeric;
+use rand::{thread_rng, Rng};
 
 type ShortUrlPath = String;
 type FullUrl = String;
@@ -20,7 +22,7 @@ impl Shortener {
             shortened_urls: VecDeque::new()
         }
     }
-    pub fn shorten_url(&mut self, full_url: FullUrl) -> String {
+    pub fn shorten_url(&mut self, full_url: &FullUrl) -> ShortUrlPath {
         // Check if a shortened url exists with the same full_url
         match self
             .shortened_urls
@@ -74,10 +76,46 @@ impl Shortener {
     }
 
     fn generate_random_url(str_len: usize) -> String {
-        let mut random_str: String = String::new();
-        for _ in 0..str_len {
-            random_str = format!("{}{}", random_str, rand::random::<char>());
-        }
-        return random_str;
+
+       return thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(str_len)
+            .map(char::from)
+            .collect();
+
+        //let mut random_str: String = String::new();
+        //for _ in 0..str_len {
+            //let ch = rand::random::<char>().to_string();
+            //println!("random char: {}", ch);
+            //random_str = format!("{}{}", random_str, ch);
+        //}
+        //return random_str;
     }
+
+}
+
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn generate_random_url_test() {
+        let random_str = super::Shortener::generate_random_url(3);
+        assert_eq!(random_str.len(), 3);
+        let random_str = super::Shortener::generate_random_url(4);
+        assert_eq!(random_str.len(), 4);
+        let random_str = super::Shortener::generate_random_url(5);
+        assert_eq!(random_str.len(), 5);
+    }
+
+    #[test]
+    fn shorten_url_test() {
+        let mut shorty = super::Shortener::new();
+
+        let full_url = "https://google.com".to_string();
+        let short_url = shorty.shorten_url(&full_url);
+        let found_full_url = shorty.get_full_url(&short_url);
+        assert_eq!(found_full_url, Some(full_url));
+        assert_eq!(shorty.get_full_url(&"non_existings.com".to_string()), None);
+    }
+
 }

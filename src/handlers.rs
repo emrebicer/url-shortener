@@ -23,11 +23,12 @@ pub async fn root_post_handler(
         Extension(shorty): Extension<Arc<Shortener>>
     ) -> Result<String, StatusCode> {
     // Generate a shortened url, return it
-    // TODO: instead of returning only the shortened path,
-    // return domain + shortened path
+    // TODO: is there a way to obtain the domain dynamically?
+    // (maybe somehow from the request...)
     match full_url {
         Some(url) => {
-            let shortened_url = shorty.shorten_url(&url);
+            let shortened_url = 
+                format!("127.0.0.1:3000/{}", shorty.shorten_url(&url));
             return Ok(shortened_url);
         },
         None => {

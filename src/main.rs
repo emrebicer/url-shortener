@@ -11,7 +11,6 @@ use handlers::{
 };
 use axum::{
     routing::get,
-    routing::post,
     Router,
     AddExtensionLayer
 };
@@ -31,9 +30,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Build the application with routes
     let app = Router::new()
-        .route("/", get(root_get_handler))
+        .route("/", get(root_get_handler).post(root_post_handler))
         .route("/web", get(web_get_handler))
-        .route("/", post(root_post_handler))
         .route("/:short_url", get(short_url_handler))
         .route("/404", get(not_found_handler))
         .layer(AddExtensionLayer::new(shorty));

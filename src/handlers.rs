@@ -1,7 +1,7 @@
 use crate::shortener::Shortener;
 use axum::{
     http::StatusCode,
-    response::Html,
+    response::{Html, IntoResponse},
     response::Redirect,
     extract::{Path, Extension}
 };
@@ -44,6 +44,10 @@ pub async fn short_url_handler(
     // return it, otherwise return 404 not found
     match shorty.get_full_url(&short_url) {
         Some(full_url) => Redirect::to(full_url.parse().unwrap()),
-        None => Redirect::to("/".parse().unwrap()),
+        None => Redirect::to("/404".parse().unwrap()),
     }
+}
+
+pub async fn not_found_handler() -> impl IntoResponse {
+   (StatusCode::NOT_FOUND, "nothing to see here")
 }

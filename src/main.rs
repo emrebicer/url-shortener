@@ -6,7 +6,8 @@ use handlers::{
     root_get_handler,
     web_get_handler,
     root_post_handler,
-    short_url_handler
+    short_url_handler,
+    not_found_handler
 };
 use axum::{
     routing::get,
@@ -34,6 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/web", get(web_get_handler))
         .route("/", post(root_post_handler))
         .route("/:short_url", get(short_url_handler))
+        .route("/404", get(not_found_handler))
         .layer(AddExtensionLayer::new(shorty));
 
     // Start the server

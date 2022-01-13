@@ -1,49 +1,47 @@
 mod shortener;
+mod handlers;
 
+use shortener::Shortener;
+use handlers::{
+    root_get_handler,
+    web_get_handler,
+    root_post_handler,
+    short_url_handler
+};
+use axum::{
+    routing::get,
+    routing::post,
+    Router,
+    AddExtensionLayer
+};
+use std::net::SocketAddr;
+use std::sync::Arc;
 
-use simple_server::{Method, Server, StatusCode};
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
-fn main() -> Result<(), Box<dyn std::error::Error>>{
-    start_server()?;
+    let shorty = Arc::new(Shortener::new());
+
+    // TODO: do I have to create an extension layer for each
+    // parameter I want to pass into my handlers?
+    // In my case, I only pass <shorty>, but what if
+    // I had more variables that I want to use in my handlers?
+    // maybe there is a more elegant way (single struct that holds several variables?)
+
+    // Build the application with routes
+    let app = Router::new()
+        .route("/", get(root_get_handler))
+        .route("/web", get(web_get_handler))
+        .route("/", post(root_post_handler))
+        .route("/:short_url", get(short_url_handler))
+        .layer(AddExtensionLayer::new(shorty));
+
+    // Start the server
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    println!("listening on {}", addr);
+    axum::Server::bind(&addr)
+        .serve(app.into_make_service())
+        .await?;
+
     Ok(())
 }
-
-
-
-
-fn start_server() -> Result<(), Box<dyn std::error::Error>>{
-    let host = "127.0.0.1";
-    let port = "7878";
-
-    let shorty = shortener::Shortener::new();
-
-    let server = Server::new(|request, mut response| {
-
-        match (request.method(), request.uri().path()) {
-            (&Method::GET, "") => {
-                // TODO: redirect to /web
-                Ok(response.body("<h1>Hi!</h1><p>Hello Rust!</p>".as_bytes().to_vec())?)
-            }
-            (&Method::POST, "") => {
-                // TODO: get the body, and generate a shorted url, return it
-                Ok(response.body("<h1>Hi!</h1><p>Hello Rust!</p>".as_bytes().to_vec())?)
-            }
-            (&Method::GET, _) => {
-                // TODO: Check if the path exists in the shortened urls, if so
-                // return it, otherwise return 404 not found
-                Ok(response.body("<h1>Hi!</h1><p>Hello Rust!</p>".as_bytes().to_vec())?)
-            }
-            (_, _) => {
-                response.status(StatusCode::NOT_FOUND);
-                Ok(response.body("<h1>404</h1><p>Not found!<p>".as_bytes().to_vec())?)
-            }
-        }
-    });
-
-    server.listen(host, port);
-    Ok(())
-}
-
-
-//fn not_found() -> Result<Response<T>, Error>) {
-//}

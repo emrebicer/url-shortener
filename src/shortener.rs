@@ -33,12 +33,12 @@ impl Shortener {
             Some(su) => su.short_url.to_string(),
             None => {
                 // It does not exist, create a short url for given full url
-                Shortener::generate_unique_random_url(&mut shortened_urls, full_url)
+                Shortener::shorten_to_unique_url(&mut shortened_urls, full_url)
             }
         };
 
-        // TODO: Not sure if I HAVE to drop them, or
-        // it unlocks the mutex by itself when the thread is finished
+        // TODO: Not sure if I HAVE to drop the locked mutex, or
+        // It unlocks the mutex by itself when the function returns
         drop(shortened_urls);
         return short_url_path;
     }
@@ -50,13 +50,13 @@ impl Shortener {
             None => None,
         };
 
-        // TODO: Not sure if I HAVE to drop them, or
-        // it unlocks the mutex by itself when the thread is finished
+        // TODO: Not sure if I HAVE to drop the locked mutex, or
+        // It unlocks the mutex by itself when the function returns
         drop(shortened_urls);
         return full_url;
     }
 
-    fn generate_unique_random_url(
+    fn shorten_to_unique_url(
         shortened_urls: &mut VecDeque<ShortenedUrl>,
         full_url: &FullUrl,
     ) -> ShortUrlPath {

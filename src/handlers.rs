@@ -1,11 +1,13 @@
 use crate::shortener::Shortener;
 use axum::{
-    http::StatusCode,
+    http::{StatusCode, Request},
     response::{Html, IntoResponse},
+    body::{Body, HttpBody},
     response::Redirect,
     extract::{Path, Extension}
 };
 use std::sync::Arc;
+use std::str;
 
 pub async fn root_get_handler() -> Redirect {
     // Redirect to /web
@@ -19,17 +21,28 @@ pub async fn web_get_handler() -> Html<&'static str> {
 }
 
 pub async fn root_post_handler(
-        full_url: Option<String>,
-        Extension(shorty): Extension<Arc<Shortener>>
+        Extension(shorty): Extension<Arc<Shortener>>,
+        mut req: Request<Body>,
     ) -> Result<String, StatusCode> {
     // Generate a shortened url, return it
-    // TODO: is there a way to obtain the domain dynamically?
-    // (maybe somehow from the request...)
-    match full_url {
-        Some(url) => {
-            let shortened_url = 
-                format!("127.0.0.1:3000/{}", shorty.shorten_url(&url));
-            return Ok(shortened_url);
+    let req_body = req.body_mut().data().await;
+    match req_body{
+        Some(some_url) => {
+            let url_bytes = some_url
+                .expect("body should consist of bytes");
+
+            let url_str = str::from_utf8(&url_bytes)
+                .expect("bytes should be convertable into a string")
+                .to_string();
+
+            let host = req.headers().get("HOST")
+                .expect("host should be included in the request headers")
+                .to_str()
+                .expect("host should be a string");
+
+                let shortened_url = 
+                    format!("{}/{}", host, shorty.shorten_url(&url_str));
+                return Ok(shortened_url);
         },
         None => {
            return Err(StatusCode::BAD_REQUEST);

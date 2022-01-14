@@ -61,7 +61,7 @@ impl Shortener {
         full_url: &FullUrl,
     ) -> ShortUrlPath {
         let mut loop_counter = 0;
-        let mut random_url_len = 4;
+        let mut random_url_len = 3;
         loop {
             // If it is taking so long to come up with a unique
             // url, just increment the url length
@@ -116,10 +116,10 @@ mod tests {
     fn shorten_url_test() {
         let shorty = super::Shortener::new();
 
-        let full_url = "https://google.com".to_string();
+        let full_url = "https://www.rust-lang.org".to_string();
         let short_url = shorty.shorten_url(&full_url);
         let found_full_url = shorty.get_full_url(&short_url);
         assert_eq!(found_full_url, Some(full_url));
-        assert_eq!(shorty.get_full_url(&"non_existings.com".to_string()), None);
+        assert_eq!(shorty.get_full_url(&"https://non_existings.com".to_string()), None);
     }
 }

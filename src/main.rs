@@ -16,13 +16,14 @@ use axum::{
 };
 use std::net::SocketAddr;
 use std::sync::Arc;
+use std::env;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let shorty = Arc::new(Shortener::new());
 
-    // TODO: do I have to create an extension layer for each
+    // TODO: Do I have to create an extension layer for each
     // parameter I want to pass into my handlers?
     // In my case, I only pass <shorty>, but what if
     // I had more variables that I want to use in my handlers?
@@ -36,8 +37,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/404", get(not_found_handler))
         .layer(AddExtensionLayer::new(shorty));
 
+    // Try to get the port from environment variables
+    let port = match env::var("PORT") {
+        Ok(port) => port.parse::<u16>()?,
+        Err(_) => 3000,
+    };
+
     // Start the server
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from(([0, 0, 0, 0], port));
     println!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())

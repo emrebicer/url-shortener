@@ -26,9 +26,12 @@ impl Shortener {
             shortened_urls: Mutex::new(VecDeque::new()),
         }
     }
-    pub fn shorten_url(&self, full_url: &FullUrl) -> ShortUrlPath {
+    pub fn shorten_url(&self, full_url: &mut FullUrl) -> ShortUrlPath {
         // Check if a shortened url exists with the same full_url
         let mut shortened_urls = self.shortened_urls.lock().unwrap();
+        if !full_url.starts_with("http://") && !full_url.starts_with("https://") {
+            full_url.insert_str(0, "http://");
+        }
         let short_url_path = match shortened_urls.iter().find(|su| su.full_url == *full_url) {
             Some(su) => su.short_url.to_string(),
             None => {
@@ -116,10 +119,16 @@ mod tests {
     fn shorten_url_test() {
         let shorty = super::Shortener::new();
 
-        let full_url = "https://www.rust-lang.org".to_string();
-        let short_url = shorty.shorten_url(&full_url);
+        let mut full_url = "https://www.rust-lang.org".to_string();
+        let short_url = shorty.shorten_url(&mut full_url);
         let found_full_url = shorty.get_full_url(&short_url);
         assert_eq!(found_full_url, Some(full_url));
         assert_eq!(shorty.get_full_url(&"https://non_existings.com".to_string()), None);
+
+        let mut full_url_no_http_prefix = "www.rust-lang.org".to_string();
+        let full_url_with_http_prefix = "http://www.rust-lang.org".to_string();
+        let short_url = shorty.shorten_url(&mut full_url_no_http_prefix);
+        let found_full_url = shorty.get_full_url(&short_url);
+        assert_eq!(found_full_url, Some(full_url_with_http_prefix));
     }
 }

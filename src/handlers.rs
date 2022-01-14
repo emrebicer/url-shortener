@@ -15,9 +15,8 @@ pub async fn root_get_handler() -> Redirect {
 }
 
 pub async fn web_get_handler() -> Html<&'static str> {
-    // TODO: return the web interface (actual HTML)
-    Html("<h1>Welcome to the web intarface, it will be implemented
-        in the future!</h1>")
+    // Return the web interface
+    Html(include_str!("../public/web.html"))
 }
 
 pub async fn root_post_handler(
@@ -31,7 +30,7 @@ pub async fn root_post_handler(
             let url_bytes = some_url
                 .expect("body should consist of bytes");
 
-            let url_str = str::from_utf8(&url_bytes)
+            let mut url_str = str::from_utf8(&url_bytes)
                 .expect("bytes should be convertable into a string")
                 .to_string();
 
@@ -40,9 +39,11 @@ pub async fn root_post_handler(
                 .to_str()
                 .expect("host should be a string");
 
-                let shortened_url = 
-                    format!("{}/{}", host, shorty.shorten_url(&url_str));
-                return Ok(shortened_url);
+            let protocol = if host.contains("localhost:") { "http://" } else { "https://" };
+
+            let shortened_url = 
+                format!("{}{}/{}", protocol, host, shorty.shorten_url(&mut url_str));
+            return Ok(shortened_url);
         },
         None => {
            return Err(StatusCode::BAD_REQUEST);

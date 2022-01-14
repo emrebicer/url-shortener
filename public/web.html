@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
+    <title>Url Shortener</title>
+</head>
+
+<body>
+    <main class="container">
+        <h1>URL Shortener</h1>
+        <div class="grid">
+            <input id="long_url_input" placeholder="Long link" type="url" class="col-sm-8">
+            </input>
+            <button id="shorten_button" class="col-sm-4">
+                Shorten
+            </button>
+        </div>
+        <div id="result_div" class="grid">
+        </div>
+    </main>
+</body>
+
+</html>
+
+<script>
+    document.getElementById("shorten_button")
+        .addEventListener("click", async () => {
+            // Make a request to the server
+            let longUrl = document.getElementById("long_url_input").value;
+
+            if (longUrl == "") {
+                alert("Please enter a url.")
+                return
+            }
+
+            const options = {
+                method: 'POST',
+                body: longUrl
+            }
+
+            await fetch("/", options)
+                .then((response) => {
+                    return response.text()
+                }).then((shortUrl) => {
+                    let resultDiv = document.getElementById("result_div")
+                    resultDiv.innerHTML = `
+                        <article>
+                            <header>
+                                Shortened link
+                            </header>
+                            <a href="${shortUrl}" target="_blank"> ${shortUrl} </a>
+                            <a href="#" id="copy_button" class="contrast" style="float: right;">
+                                Copy
+                            </a>
+                        </article>
+                    `
+                    let copyButton = document.getElementById("copy_button")
+                    copy_button.onclick = function() {
+                        navigator.clipboard.writeText(shortUrl)
+                    };
+                })
+        });
+</script>
+
+<style>
+    /* Deep-orange Light scheme (Default) */
+    /* Can be forced with data-theme="light" */
+    [data-theme="light"],
+    :root:not([data-theme="dark"]) {
+        --primary: #f4511e;
+        --primary-hover: #e64a19;
+        --primary-focus: rgba(244, 81, 30, 0.125);
+        --primary-inverse: #FFF;
+    }
+
+    /* Deep-orange Dark scheme (Auto) */
+    /* Automatically enabled if user has Dark mode enabled */
+    @media only screen and (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+            --primary: #f4511e;
+            --primary-hover: #ff5722;
+            --primary-focus: rgba(244, 81, 30, 0.25);
+            --primary-inverse: #FFF;
+        }
+    }
+
+    /* Deep-orange Dark scheme (Forced) */
+    /* Enabled if forced with data-theme="dark" */
+    [data-theme="dark"] {
+        --primary: #f4511e;
+        --primary-hover: #ff5722;
+        --primary-focus: rgba(244, 81, 30, 0.25);
+        --primary-inverse: #FFF;
+    }
+
+    /* Deep-orange (Common styles) */
+    :root {
+        --form-element-active-border-color: var(--primary);
+        --form-element-focus-color: var(--primary-focus);
+        --switch-color: var(--primary-inverse);
+        --switch-checked-background-color: var(--primary);
+    }
+</style>

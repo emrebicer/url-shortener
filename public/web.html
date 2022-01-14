@@ -26,6 +26,13 @@
 </html>
 
 <script>
+    document.getElementById("long_url_input")
+        .addEventListener("keypress", (e) => {
+            if (e.key == "Enter") {
+                document.getElementById("shorten_button").click()
+            }
+        })
+
     document.getElementById("shorten_button")
         .addEventListener("click", async () => {
             // Make a request to the server

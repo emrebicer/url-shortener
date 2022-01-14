@@ -11,5 +11,7 @@ $ cargo run
 $ curl -X POST 127.0.0.1:3000 -d "https://github.com"
 127.0.0.1:3000/z6a6 # Response from the server
 ```
+
+Or you can directly use https://url-rs.herokuapp.com/ to test the project.
 ## Web interface
 The web interface will be implemented in the future, and will be accessible at ***/web***

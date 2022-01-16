@@ -1,14 +1,14 @@
 use chrono::{DateTime, Utc};
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
-use std::collections::VecDeque;
+use std::collections::hash_map::HashMap;
 use std::sync::Mutex;
 
 type ShortUrlPath = String;
 type FullUrl = String;
 
 pub struct Shortener {
-    shortened_urls: Mutex<VecDeque<ShortenedUrl>>,
+    shortened_urls: Mutex<HashMap<String, ShortenedUrl>>,
 }
 
 #[derive(Clone)]
@@ -23,7 +23,7 @@ struct ShortenedUrl {
 impl Shortener {
     pub fn new() -> Shortener {
         Shortener {
-            shortened_urls: Mutex::new(VecDeque::new()),
+            shortened_urls: Mutex::new(HashMap::new()),
         }
     }
     pub fn shorten_url(&self, full_url: &mut FullUrl) -> ShortUrlPath {
@@ -32,7 +32,7 @@ impl Shortener {
         if !full_url.starts_with("http://") && !full_url.starts_with("https://") {
             full_url.insert_str(0, "http://");
         }
-        let short_url_path = match shortened_urls.iter().find(|su| su.full_url == *full_url) {
+        let short_url_path = match shortened_urls.values().find(|su| su.full_url == *full_url) {
             Some(su) => su.short_url.to_string(),
             None => {
                 // It does not exist, create a short url for given full url
@@ -48,7 +48,7 @@ impl Shortener {
 
     pub fn get_full_url(&self, short_url: &ShortUrlPath) -> Option<FullUrl> {
         let shortened_urls = self.shortened_urls.lock().unwrap();
-        let full_url = match shortened_urls.iter().find(|su| su.short_url == *short_url) {
+        let full_url = match shortened_urls.get(short_url) {
             Some(su) => Some(su.full_url.to_string()),
             None => None,
         };
@@ -60,11 +60,11 @@ impl Shortener {
     }
 
     fn shorten_to_unique_url(
-        shortened_urls: &mut VecDeque<ShortenedUrl>,
+        shortened_urls: &mut HashMap<String, ShortenedUrl>,
         full_url: &FullUrl,
     ) -> ShortUrlPath {
         let mut loop_counter = 0;
-        let mut random_url_len = 3;
+        let mut random_url_len = 2;
         loop {
             // If it is taking so long to come up with a unique
             // url, just increment the url length
@@ -76,19 +76,20 @@ impl Shortener {
             let short_url = Shortener::generate_random_url(random_url_len);
 
             // Check if the found random short url is already in use
-            match shortened_urls
-                .into_iter()
-                .any(|shortened| shortened.short_url == short_url)
-            {
-                true => continue, // Such a short url exists
-                false => {
+            match shortened_urls.get(&short_url) {
+                Some(_) => continue, // Such a short url exists
+                None => {
+                    let short_url_clone = short_url.clone();
                     // That random url is suitable
-                    shortened_urls.push_back(ShortenedUrl {
-                        short_url: short_url.to_string(),
-                        full_url: full_url.to_string(),
-                        time_added: chrono::offset::Utc::now(),
-                    });
-                    return short_url;
+                    shortened_urls.insert(
+                        short_url,
+                        ShortenedUrl {
+                            short_url: short_url_clone.to_string(),
+                            full_url: full_url.to_string(),
+                            time_added: chrono::offset::Utc::now(),
+                        },
+                    );
+                    return short_url_clone;
                 }
             }
         }
@@ -123,7 +124,10 @@ mod tests {
         let short_url = shorty.shorten_url(&mut full_url);
         let found_full_url = shorty.get_full_url(&short_url);
         assert_eq!(found_full_url, Some(full_url));
-        assert_eq!(shorty.get_full_url(&"https://non_existings.com".to_string()), None);
+        assert_eq!(
+            shorty.get_full_url(&"https://non_existings.com".to_string()),
+            None
+        );
 
         let mut full_url_no_http_prefix = "www.rust-lang.org".to_string();
         let full_url_with_http_prefix = "http://www.rust-lang.org".to_string();

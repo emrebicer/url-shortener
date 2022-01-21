@@ -23,12 +23,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let shorty = Arc::new(Shortener::new());
 
-    // TODO: Do I have to create an extension layer for each
-    // parameter I want to pass into my handlers?
-    // In my case, I only pass <shorty>, but what if
-    // I had more variables that I want to use in my handlers?
-    // maybe there is a more elegant way (single struct that holds several variables?)
-
     // Build the application with routes
     let app = Router::new()
         .route("/", get(root_get_handler).post(root_post_handler))

@@ -39,10 +39,6 @@ impl Shortener {
                 Shortener::shorten_to_unique_url(&mut shortened_urls, full_url)
             }
         };
-
-        // TODO: Not sure if I HAVE to drop the locked mutex, or
-        // It unlocks the mutex by itself when the function returns
-        drop(shortened_urls);
         return short_url_path;
     }
 
@@ -52,10 +48,6 @@ impl Shortener {
             Some(su) => Some(su.full_url.to_string()),
             None => None,
         };
-
-        // TODO: Not sure if I HAVE to drop the locked mutex, or
-        // It unlocks the mutex by itself when the function returns
-        drop(shortened_urls);
         return full_url;
     }
 

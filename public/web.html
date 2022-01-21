@@ -12,7 +12,7 @@
     <main class="container">
         <h1>URL Shortener</h1>
         <div class="grid">
-            <input id="long_url_input" placeholder="Long link" type="url" class="col-sm-8">
+            <input id="long_url_input" placeholder="Long URL" type="url" class="col-sm-8">
             </input>
             <button id="shorten_button" class="col-sm-4">
                 Shorten
@@ -43,6 +43,11 @@
                 return
             }
 
+            let resultDiv = document.getElementById("result_div")
+            resultDiv.innerHTML = `
+                <progress indeterminate="true"></progress>
+            `
+
             const options = {
                 method: 'POST',
                 body: longUrl
@@ -51,12 +56,12 @@
             await fetch("/", options)
                 .then((response) => {
                     return response.text()
-                }).then((shortUrl) => {
-                    let resultDiv = document.getElementById("result_div")
+                })
+                .then((shortUrl) => {
                     resultDiv.innerHTML = `
                         <article>
                             <header>
-                                Shortened link
+                                Shortened URL
                             </header>
                             <a href="${shortUrl}" target="_blank"> ${shortUrl} </a>
                             <a href="#" id="copy_button" class="contrast" style="float: right;">
@@ -68,6 +73,11 @@
                     copy_button.onclick = function() {
                         navigator.clipboard.writeText(shortUrl)
                     };
+                })
+                .catch(err => {
+                    resultDiv.innerHTML = `
+                        Something went wrong... ${err}
+                    `
                 })
         });
 </script>

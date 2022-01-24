@@ -1,4 +1,4 @@
-use crate::shortener::Shortener;
+use crate::url_manager::UrlManager;
 use axum::{
     http::{StatusCode, Request},
     response::{Html, IntoResponse},
@@ -19,8 +19,8 @@ pub async fn web_get_handler() -> Html<&'static str> {
     Html(include_str!("../public/web.html"))
 }
 
-pub async fn root_post_handler(
-        Extension(shorty): Extension<Arc<Shortener>>,
+pub async fn root_post_handler<T: UrlManager>(
+        Extension(manager): Extension<Arc<T>>,
         mut req: Request<Body>,
     ) -> Result<String, StatusCode> {
     // Generate a shortened url, return it
@@ -42,7 +42,7 @@ pub async fn root_post_handler(
             let protocol = if host.contains("localhost:") { "http://" } else { "https://" };
 
             let shortened_url = 
-                format!("{}{}/{}", protocol, host, shorty.shorten_url(&mut url_str));
+                format!("{}{}/{}", protocol, host, manager.shorten_url(&mut url_str));
             return Ok(shortened_url);
         },
         None => {
@@ -51,13 +51,13 @@ pub async fn root_post_handler(
     }
 }
 
-pub async fn short_url_handler(
-        Path(short_url): Path<String>,
-        Extension(shorty): Extension<Arc<Shortener>>
+pub async fn short_url_handler<T: UrlManager>(
+        Path(short_url_path): Path<String>,
+        Extension(manager): Extension<Arc<T>>
     ) -> Redirect {
     // Check if the short_url exists in the shortened urls, if so
     // return it, otherwise return 404 not found
-    match shorty.get_full_url(&short_url) {
+    match manager.get_full_url(&short_url_path) {
         Some(full_url) => Redirect::to(full_url.parse().unwrap()),
         None => Redirect::to("/404".parse().unwrap()),
     }

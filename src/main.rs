@@ -1,7 +1,8 @@
-mod shortener;
+mod memory_database;
 mod handlers;
+mod url_manager;
 
-use shortener::Shortener;
+use memory_database::MemoryDatabase;
 use handlers::{
     root_get_handler,
     web_get_handler,
@@ -21,15 +22,15 @@ use std::env;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
-    let shorty = Arc::new(Shortener::new());
+    let db = Arc::new(MemoryDatabase::new());
 
     // Build the application with routes
     let app = Router::new()
-        .route("/", get(root_get_handler).post(root_post_handler))
+        .route("/", get(root_get_handler).post(root_post_handler::<MemoryDatabase>))
         .route("/web", get(web_get_handler))
-        .route("/:short_url", get(short_url_handler))
+        .route("/:short_url", get(short_url_handler::<MemoryDatabase>))
         .route("/404", get(not_found_handler))
-        .layer(AddExtensionLayer::new(shorty));
+        .layer(AddExtensionLayer::new(db));
 
     // Try to get the port from environment variables
     let port = match env::var("PORT") {

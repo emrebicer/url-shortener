@@ -1,35 +1,25 @@
-mod memory_database;
 mod handlers;
+mod memory_database;
 mod url_manager;
+mod util;
 
+use axum::{routing::get, AddExtensionLayer, Router};
+use handlers::{not_found, root_get, root_post, short_url, web_get};
 use memory_database::MemoryDatabase;
-use handlers::{
-    root_get_handler,
-    web_get_handler,
-    root_post_handler,
-    short_url_handler,
-    not_found_handler
-};
-use axum::{
-    routing::get,
-    Router,
-    AddExtensionLayer
-};
+use std::env;
 use std::net::SocketAddr;
 use std::sync::Arc;
-use std::env;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-
     let db = Arc::new(MemoryDatabase::new());
 
     // Build the application with routes
     let app = Router::new()
-        .route("/", get(root_get_handler).post(root_post_handler::<MemoryDatabase>))
-        .route("/web", get(web_get_handler))
-        .route("/:short_url", get(short_url_handler::<MemoryDatabase>))
-        .route("/404", get(not_found_handler))
+        .route("/", get(root_get).post(root_post::<MemoryDatabase>))
+        .route("/web", get(web_get))
+        .route("/:short_url", get(short_url::<MemoryDatabase>))
+        .route("/404", get(not_found))
         .layer(AddExtensionLayer::new(db));
 
     // Try to get the port from environment variables

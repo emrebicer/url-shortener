@@ -37,13 +37,15 @@
         .addEventListener("click", async () => {
             // Make a request to the server
             let longUrl = document.getElementById("long_url_input").value;
+            let resultDiv = document.getElementById("result_div")
 
             if (longUrl == "") {
-                alert("Please enter a url.")
+                resultDiv.innerHTML = `
+                    Please enter a URL.
+                `
                 return
             }
 
-            let resultDiv = document.getElementById("result_div")
             resultDiv.innerHTML = `
                 <progress indeterminate="true"></progress>
             `

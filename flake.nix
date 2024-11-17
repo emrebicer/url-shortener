@@ -35,8 +35,8 @@
     };
 
     nixosModules = {
-      urlShortener = { config, lib, pkgs, ... }: with lib; {
-        options.urlShortener = {
+      url-shortener = { config, lib, pkgs, ... }: with lib; {
+        options.url-shortener = {
           enable = mkOption {
             type = types.bool;
             default = false;
@@ -56,7 +56,7 @@
           };
         };
 
-        config = mkIf config.urlShortener.enable {
+        config = mkIf config.url-shortener.enable {
           systemd.services.url-shortener = {
             description = "URL Shortener Service";
             after = [ "network.target" ];
@@ -68,7 +68,7 @@
                 version = "0.1.0";
                 src = ./.;
                 cargoLock = { lockFile = ./Cargo.lock; };
-              }}/bin/url_shortener --host ${config.urlShortener.host} --port ${toString config.urlShortener.port}";
+              }}/bin/url_shortener --host ${config.url-shortener.host} --port ${toString config.url-shortener.port}";
               Restart = "always";
             };
           };

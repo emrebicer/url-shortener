@@ -33,21 +33,15 @@ pub async fn root_post<T: UrlManager>(
                 .expect("bytes should be convertable into a string")
                 .to_string();
 
-            let host = req
+            let origin = req
                 .headers()
-                .get("HOST")
-                .expect("host should be included in the request headers")
+                .get("Origin")
+                .expect("origin should be included in the request headers")
                 .to_str()
-                .expect("host should be a string");
-
-            let protocol = if host.contains("localhost:") {
-                "http://"
-            } else {
-                "https://"
-            };
+                .expect("origin should be a string");
 
             let shortened_url =
-                format!("{}{}/{}", protocol, host, manager.shorten_url(&mut url_str));
+                format!("{}/{}", origin, manager.shorten_url(&mut url_str));
             return Ok(shortened_url);
         }
         None => {

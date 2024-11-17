@@ -3,84 +3,78 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    let 
-      lib = nixpkgs.lib;
-      pkgs = import nixpkgs;
-    in 
-    flake-utils.lib.eachDefaultSystem (system:
-      let 
-        pkgs = import nixpkgs { inherit system; };
-      in {
-        devShells.default = pkgs.mkShellNoCC {
-          buildInputs = with pkgs; [
-            gcc9
-            cargo
-            rustc
-          ];
+  outputs = { self, nixpkgs }: let
+    system = "x86_64-linux";
+    lib = nixpkgs.lib;
+          pkgs = nixpkgs.legacyPackages.${system};
+  in {
+
+      devShells.${system}.default = pkgs.mkShellNoCC {
+        buildInputs = with pkgs; [
+          gcc9
+          cargo
+          rustc
+        ];
+      };
+
+
+    packages.${system}.default = pkgs.rustPlatform.buildRustPackage {
+        pname = "url_shortener";
+        version = "0.1.0";
+        src = ./.;
+        cargoLock = {
+          lockFile = ./Cargo.lock;
         };
+      };
 
-        packages.default = pkgs.rustPlatform.buildRustPackage {
-          pname = "url_shortener";
-          version = "0.1.0";
-          src = ./.;
-          cargoLock = {
-            lockFile = ./Cargo.lock;
-          };
-        };
-
-        apps.default = {
-          type = "app";
-          program = "${self.packages.${system}.default}/bin/url_shortener";
-        };
-      })
-
-    // {
-      # NixOS module to enable the service (system-independent)
-      nixosModules.url-shortener = { config, lib, pkgs, ... }:
-        with lib;
-        let
-        in
-        {
-          options = {
-            enable = mkOption {
-              type = types.bool;
-              default = false;
-              description = "Enable the URL shortener systemd service.";
-            };
-            host = mkOption {
-              type = types.str;
-              default = "127.0.0.1";
-              description = "The host the URL shortener will bind to.";
-            };
-            port = mkOption {
-              type = types.port;
-              default = 8000;
-              description = "The port the URL shortener will listen on.";
-            };
-          };
-          config = mkIf config.url-shortener.enable {
-            systemd.services.url-shortener = {
-              description = "URL Shortener Service";
-              after = [ "network.target" ];
-              wantedBy = [ "multi-user.target" ];
-
-              serviceConfig = {
-                ExecStart = "${pkgs.rustPlatform.buildRustPackage {
-                  pname = "url_shortener";
-                  version = "0.1.0";
-                  src = ./.;
-                  cargoLock = { lockFile = ./Cargo.lock; };
-                }}/bin/url_shortener --host ${config.url-shortener.host} --port ${toString config.url-shortener.port}";
-                Restart = "always";
-              };
-            };
-          };
-        };
-
+    apps.${system}.default = {
+        type = "app";
+        program = "${self.packages.x86_64-linux}/bin/url_shortener";
     };
+
+    nixosModules = {
+      urlShortener = { config, lib, pkgs, ... }: with lib; {
+        options.urlShortener = {
+          enable = mkOption {
+            type = types.bool;
+            default = false;
+            description = "Enable the URL shortener systemd service.";
+          };
+
+          host = mkOption {
+            type = types.str;
+            default = "127.0.0.1";
+            description = "The host the URL shortener will bind to.";
+          };
+
+          port = mkOption {
+            type = types.port;
+            default = 8000;
+            description = "The port the URL shortener will listen on.";
+          };
+        };
+
+        config = mkIf config.urlShortener.enable {
+          systemd.services.url-shortener = {
+            description = "URL Shortener Service";
+            after = [ "network.target" ];
+            wantedBy = [ "multi-user.target" ];
+
+            serviceConfig = {
+              ExecStart = "${pkgs.rustPlatform.buildRustPackage {
+                pname = "url_shortener";
+                version = "0.1.0";
+                src = ./.;
+                cargoLock = { lockFile = ./Cargo.lock; };
+              }}/bin/url_shortener --host ${config.urlShortener.host} --port ${toString config.urlShortener.port}";
+              Restart = "always";
+            };
+          };
+        };
+      };
+    };
+  };
 }
 

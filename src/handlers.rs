@@ -33,15 +33,27 @@ pub async fn root_post<T: UrlManager>(
                 .expect("bytes should be convertable into a string")
                 .to_string();
 
-            let origin = req
-                .headers()
-                .get("Origin")
-                .expect("origin should be included in the request headers")
-                .to_str()
-                .expect("origin should be a string");
+            // First check if origin exists, it is better because the protocol will be included
+            let origin = req.headers().get("Origin");
 
-            let shortened_url =
-                format!("{}/{}", origin, manager.shorten_url(&mut url_str));
+            let host = req
+                .headers()
+                .get("host")
+                .expect("HOST header must be present")
+                .to_str()
+                .expect("host header must be a valid string")
+                .to_string();
+
+            // If origin is not here, fallback to http + host
+            let addr = match origin {
+                Some(orig) => orig
+                    .to_str()
+                    .expect("origin header must be a valid string")
+                    .to_string(),
+                None => format!("{}/{}", "http://", host),
+            };
+
+            let shortened_url = format!("{}/{}", addr, manager.shorten_url(&mut url_str));
             return Ok(shortened_url);
         }
         None => {

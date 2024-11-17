@@ -1,5 +1,5 @@
 use crate::url_manager::{FullUrl, ShortUrlPath, UrlManager};
-use crate::util::{generate_random_url_path, insert_https_protocol};
+use crate::util::{generate_random_url_path, verify_http_protocol};
 use chrono::{DateTime, Utc};
 use std::collections::hash_map::HashMap;
 use std::sync::Mutex;
@@ -20,7 +20,7 @@ pub struct ShortenedUrl {
 impl UrlManager for MemoryDatabase {
     fn shorten_url(&self, full_url: &mut FullUrl) -> ShortUrlPath {
         // Make sure the full url has the http protocol prefix
-        insert_https_protocol(full_url);
+        verify_http_protocol(full_url);
 
         // Check if a shortened url exists with the same full_url
         let mut shortened_urls = self.shortened_urls.lock().expect("The mutex is poisened");
@@ -103,9 +103,9 @@ mod tests {
         );
 
         let mut full_url_no_http_prefix = "www.rust-lang.org".to_string();
-        let full_url_with_https_prefix = "https://www.rust-lang.org".to_string();
+        let full_url_with_http_prefix = "http://www.rust-lang.org".to_string();
         let short_url = shorty.shorten_url(&mut full_url_no_http_prefix);
         let found_full_url = shorty.get_full_url(&short_url);
-        assert_eq!(found_full_url, Some(full_url_with_https_prefix));
+        assert_eq!(found_full_url, Some(full_url_with_http_prefix));
     }
 }

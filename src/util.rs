@@ -3,12 +3,10 @@ use crate::url_manager::{FullUrl, ShortUrlPath};
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 
-pub fn insert_https_protocol(url: &mut FullUrl) -> &FullUrl {
+pub fn verify_http_protocol(url: &mut FullUrl) {
     if !url.starts_with("http://") && !url.starts_with("https://") {
-        url.insert_str(0, "https://");
+        url.insert_str(0, "http://");
     };
-
-    return url;
 }
 
 pub fn generate_random_url_path(str_len: usize) -> ShortUrlPath {
@@ -32,30 +30,30 @@ mod tests {
     }
 
     #[test]
-    fn insert_https_protocol_test() {
+    fn verify_http_protocol_test() {
         let mut url = "https://www.rust-lang.org/".to_string();
-        super::insert_https_protocol(&mut url);
+        super::verify_http_protocol(&mut url);
         assert_eq!(url, "https://www.rust-lang.org/");
 
         url = "http://www.rust-lang.org/".to_string();
-        super::insert_https_protocol(&mut url);
+        super::verify_http_protocol(&mut url);
         assert_eq!(url, "http://www.rust-lang.org/");
 
         url = "www.rust-lang.org/".to_string();
-        super::insert_https_protocol(&mut url);
-        assert_eq!(url, "https://www.rust-lang.org/");
+        super::verify_http_protocol(&mut url);
+        assert_eq!(url, "http://www.rust-lang.org/");
 
         url = "httprust-lang.org/".to_string();
-        super::insert_https_protocol(&mut url);
-        assert_eq!(url, "https://httprust-lang.org/");
+        super::verify_http_protocol(&mut url);
+        assert_eq!(url, "http://httprust-lang.org/");
 
         url = "httpsrust-lang.org/".to_string();
-        super::insert_https_protocol(&mut url);
-        assert_eq!(url, "https://httpsrust-lang.org/");
+        super::verify_http_protocol(&mut url);
+        assert_eq!(url, "http://httpsrust-lang.org/");
 
         // Short url test
         url = "u.me".to_string();
-        super::insert_https_protocol(&mut url);
-        assert_eq!(url, "https://u.me");
+        super::verify_http_protocol(&mut url);
+        assert_eq!(url, "http://u.me");
     }
 }

@@ -4,20 +4,21 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
+    >
     <title>Url Shortener</title>
 </head>
 
 <body>
     <main class="container">
         <h1>URL Shortener</h1>
-        <div class="grid">
-            <input id="long_url_input" placeholder="Long URL" type="url" class="col-sm-8">
-            </input>
-            <button id="shorten_button" class="col-sm-4">
-                Shorten
-            </button>
-        </div>
+
+          <fieldset role="group">
+            <input id="long_url_input" name="link" type="link" placeholder="Enter the long URL" />
+            <input id="shorten_button" type="submit" value="Shorten" />
+          </fieldset>
         <div id="result_div" class="grid">
         </div>
     </main>

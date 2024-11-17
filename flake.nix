@@ -7,9 +7,10 @@
   };
 
   outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system: 
+    flake-utils.lib.eachDefaultSystem (system:
       let 
         pkgs = import nixpkgs { inherit system; };
+        lib = nixpkgs.lib;
       in {
         devShells.default = pkgs.mkShellNoCC {
           buildInputs = with pkgs; [
@@ -33,6 +34,41 @@
           program = "${self.packages.${system}.default}/bin/url_shortener";
         };
 
+        # NixOS module to enable the service
+        nixosModules.url-shortener = {
+          options.url-shortener = {
+            enable = lib.mkOption {
+              type = lib.types.bool;
+              default = false;
+              description = "Enable the URL shortener systemd service.";
+            };
+
+            host = lib.mkOption {
+              type = lib.types.str;
+              default = "127.0.0.1";
+              description = "The host the URL shortener will bind to.";
+            };
+
+            port = lib.mkOption {
+              type = lib.types.port;
+              default = 8000;
+              description = "The port the URL shortener will listen on.";
+            };
+          };
+
+          config = lib.mkIf self.config.url-shortener.enable {
+            systemd.services.url-shortener = {
+              description = "URL Shortener Service";
+              after = [ "network.target" ];
+              wantedBy = [ "multi-user.target" ];
+
+              serviceConfig = {
+                ExecStart = "${self.packages.${system}.default}/bin/url_shortener --host ${self.config.url-shortener.host} --port ${toString self.config.url-shortener.port}";
+                Restart = "always";
+              };
+            };
+          };
+        };
       });
 }
 
